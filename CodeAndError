@@ -1,0 +1,46 @@
+library(shiny)
+library(shinydashboard)
+library(leaflet)
+library(dplyr)
+library(htmltools)
+library(gsheet)
+
+shinyApp(
+
+  ui <- fluidPage(
+   
+    leafletOutput("myMap", width="100%", height="100%"),
+    titlePanel("eBird Visualizer"),
+    fileInput("MyEBirdData_in", "MyEBirdData", multiple = FALSE, buttonLabel = "Upload a .csv", 
+              placeholder = "No File Selected...", width = "255px")
+  ),
+  
+  server = function(input, output) {
+    
+    myData = reactive(input$MyEBirdData_in) # I think this is where the problem is.
+
+    df0 = data.frame(myData$Submission.ID, myData$Latitude, myData$Longitude)
+    df = unique(df0)
+    names(df)[2] = 'latitude'
+    names(df)[3] = 'longitude'
+
+    circleIcon = makeIcon(
+      iconUrl = "http://www.clker.com/cliparts/Q/l/D/8/k/m/red-circle-icon-md.png",
+      iconWidth = 7, iconHeight = 7)
+
+    eBirdMap = leaflet(data = df) %>% addProviderTiles(providers$CartoDB.Positron) %>%
+      addMarkers(icon = circleIcon)
+
+    output$myMap = renderLeaflet(eBirdMap)
+  }
+)
+
+Here's the error:
+
+Warning: Error in $: object of type 'closure' is not subsettable
+Stack trace (innermost first):
+    38: data.frame
+    37: server [/Users/Guest/Desktop/My_eBirdVisualizer/My_eBirdVisualizer.R#25]
+     1: runApp
+Error in myData$Submission.ID : 
+  object of type 'closure' is not subsettable
